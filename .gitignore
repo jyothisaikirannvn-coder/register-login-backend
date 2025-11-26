@@ -1,0 +1,38 @@
+# Security – never commit sensitive files
+.env
+**/*.pem
+**/*.key
+**/*.p8
+**/*credentials*
+
+# Maven
+/target/
+*.log
+
+# IDEs
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS files
+.DS_Store
+
+# Build
+build/
+nbbuild/
+dist/
+"src/main/resources/application.properties" 
+".env" 
+"target/" 
+"*.class" 
+"*.jar" 
+".idea/" 
