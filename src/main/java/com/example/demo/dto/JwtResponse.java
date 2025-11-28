@@ -5,13 +5,17 @@ public class JwtResponse {
     private String type = "Bearer";
     private String email;
     private String role;
+    private String userId;  // ✅ ADDED userId FIELD
 
-    public JwtResponse(String token, String email, String role) {
+    // ✅ UPDATED CONSTRUCTOR - ADD userId PARAMETER
+    public JwtResponse(String token, String email, String role, String userId) {
         this.token = token;
         this.email = email;
         this.role = role;
+        this.userId = userId;  // ✅ SAVE userId
     }
 
+    // ✅ EXISTING GETTERS/SETTERS (UNCHANGED)
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }
 
@@ -23,4 +27,8 @@ public class JwtResponse {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    // ✅ NEW userId GETTER/SETTER
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 }

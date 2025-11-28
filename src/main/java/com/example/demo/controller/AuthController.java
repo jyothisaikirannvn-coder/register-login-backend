@@ -40,11 +40,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         try {
-            String jwt = userService.login(loginRequest);
-            User user = userService.getUserByEmail(loginRequest.getEmail());
-
+            // ✅ FIXED: userService.login() NOW RETURNS JwtResponse
+            JwtResponse jwtResponse = userService.login(loginRequest);
+            
             // Create HttpOnly cookie (server-managed session)
-            Cookie jwtCookie = new Cookie("jwtToken", jwt);
+            Cookie jwtCookie = new Cookie("jwtToken", jwtResponse.getToken());
             jwtCookie.setHttpOnly(true);
             jwtCookie.setSecure(cookieSecure); // true in production; false allowed in dev
             jwtCookie.setPath("/");
@@ -59,14 +59,15 @@ public class AuthController {
             String domainPart = (cookieDomain != null && !cookieDomain.isBlank()) ? "; Domain=" + cookieDomain : "";
             response.setHeader("Set-Cookie",
                     String.format("jwtToken=%s; HttpOnly; Path=/; Max-Age=86400; Secure=%s; SameSite=%s%s",
-                            jwt,
+                            jwtResponse.getToken(),  // ✅ Use from JwtResponse
                             cookieSecure ? "true" : "false",
                             sameSite,
                             domainPart
                     )
             );
 
-            return ResponseEntity.ok(new JwtResponse(jwt, user.getEmail(), user.getRole()));
+            // ✅ NOW RETURNS userId IN RESPONSE!
+            return ResponseEntity.ok(jwtResponse);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse(e.getMessage()));
         }
