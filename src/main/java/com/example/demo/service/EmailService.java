@@ -1,14 +1,11 @@
 package com.example.demo.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -17,53 +14,44 @@ public class EmailService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${resend.api-key:}")
+    @Value("${brevo.api-key}")
     private String apiKey;
 
-    @Value("${smtp.from:onboarding@resend.dev}")
-    private String defaultFrom;
+    @Value("${smtp.from}")
+    private String fromEmail;
 
     public void sendOtp(String to, String otp) {
-        if (apiKey.isBlank()) {
-            throw new RuntimeException("RESEND_API_KEY not configured");
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new RuntimeException("BREVO_API_KEY is missing!");
         }
 
-        // Build Resend email request body
-        Map<String, Object> emailRequest = new HashMap<>();
-        // ✅ FIX: Use recipient's email as display name + default from (bypasses free-tier restriction)
-        emailRequest.put("from", to + " via <" + defaultFrom + ">");
-        emailRequest.put("to", Collections.singletonList(to));  // List for single recipient
-        emailRequest.put("subject", "Your OTP Code");
-        emailRequest.put("text", "Your OTP is: " + otp + "\nThis code expires in 10 minutes.");
+        Map<String, Object> request = Map.of(
+            "sender", Map.of("name", "Your App OTP", "email", fromEmail),
+            "to", Map.of("email", to),
+            "subject", "Your OTP Code",
+            "htmlContent", "<h2>Your OTP is <strong style='font-size: 24px; color: #007bff;'>" + otp + "</strong></h2><p>It expires in 10 minutes.</p>",
+            "textContent", "Your OTP is: " + otp + "\nExpires in 10 minutes."
+        );
 
         try {
-            // Headers: JSON + Bearer auth
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(apiKey);
+            headers.set("api-key", apiKey);
 
-            // Convert to JSON string
-            String jsonBody;
-            try {
-                jsonBody = objectMapper.writeValueAsString(emailRequest);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Failed to serialize email request: " + e.getMessage());
-            }
-
+            String jsonBody = objectMapper.writeValueAsString(request);
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
-            // Send POST to Resend API
             ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://api.resend.com/emails", entity, String.class
+                "https://api.brevo.com/v3/smtp/email", entity, String.class
             );
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                System.out.println("✅ OTP email sent successfully via Resend API");
+                System.out.println("OTP email sent successfully to " + to + " via Brevo");
             } else {
-                throw new RuntimeException("Resend API failed with status " + response.getStatusCode() + ": " + response.getBody());
+                throw new RuntimeException("Brevo error: " + response.getBody());
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send OTP email via Resend: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to send OTP email: " + e.getMessage());
         }
     }
 }
