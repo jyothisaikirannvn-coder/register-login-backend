@@ -30,7 +30,7 @@ public class EmailService {
 
         // Build Resend email request body
         Map<String, Object> emailRequest = new HashMap<>();
-        emailRequest.put("from", from);
+        emailRequest.put("from", to + " via <onboarding@resend.dev>");
         emailRequest.put("to", Collections.singletonList(to));  // List for single recipient
         emailRequest.put("subject", "Your OTP Code");
         emailRequest.put("text", "Your OTP is: " + otp + "\nThis code expires in 10 minutes.");
