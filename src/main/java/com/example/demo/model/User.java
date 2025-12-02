@@ -20,8 +20,8 @@ public class User {
     private String updatedAt;
 
     // OTP password reset (simple flow)
-    private String otp;          // 6-digit code
-    private String otpExpiry;    // ISO-8601 instant string
+    private String otp;         
+    private String otpExpiry;    
 
     // ---- Getters & Setters (NO Lombok) ----
     public String getUserId() { return userId; }
