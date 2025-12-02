@@ -6,6 +6,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -25,9 +26,13 @@ public class EmailService {
             throw new RuntimeException("BREVO_API_KEY is missing!");
         }
 
+        // Fixed: 'to' as array of objects (Brevo requirement for single recipient)
+        Map<String, Object> toMap = Map.of("email", to);
+        List<Map<String, Object>> toList = List.of(toMap);
+
         Map<String, Object> request = Map.of(
             "sender", Map.of("name", "Your App OTP", "email", fromEmail),
-            "to", Map.of("email", to),
+            "to", toList,  // ✅ FIXED: Array of objects
             "subject", "Your OTP Code",
             "htmlContent", "<h2>Your OTP is <strong style='font-size: 24px; color: #007bff;'>" + otp + "</strong></h2><p>It expires in 10 minutes.</p>",
             "textContent", "Your OTP is: " + otp + "\nExpires in 10 minutes."
